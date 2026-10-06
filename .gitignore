@@ -1,0 +1,7 @@
+# 编译输出
+build/
+
+# 编辑器/系统文件
+.vscode/
+.DS_Store
+*.swp
