@@ -12,6 +12,11 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
+# 启用 C++（bsp/libs/modules/threads 使用 C++ 编写）
+enable_language(CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 # Define the build type
 if(NOT CMAKE_BUILD_TYPE)
@@ -42,14 +47,24 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined library search paths
 )
 
-# Add sources to executable
+# Add sources to executable（bsp → libs → modules → threads，按依赖顺序）
+file(GLOB_RECURSE BSP_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../bsp/src/*.cpp")
+file(GLOB_RECURSE LIB_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../libs/src/*.cpp")
+file(GLOB_RECURSE MODULE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../modules/src/*.cpp")
+file(GLOB_RECURSE THREAD_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../threads/src/*.cpp")
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
+    ${BSP_SOURCES}
+    ${LIB_SOURCES}
+    ${MODULE_SOURCES}
+    ${THREAD_SOURCES}
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined include paths
+    ${CMAKE_CURRENT_SOURCE_DIR}/../bsp/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../libs/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../threads/include
 )
 
 # Add project symbols (macros)
