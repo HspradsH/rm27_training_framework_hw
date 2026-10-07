@@ -1,4 +1,5 @@
 #include "bsp_can.hpp"
+#include "DJIMotorHandler.hpp"
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
@@ -34,6 +35,7 @@ void CAN_Init(void)
 
 void CAN_Transmit(CAN_HandleTypeDef *hcan, uint32_t Id, uint8_t *msg, uint16_t len)
 {
+    if(hcan == nullptr || msg == nullptr || len == 0 || len > 8)return;
     if (HAL_CAN_GetTxMailboxesFreeLevel(hcan) == 0)
     {
         // 如果邮箱已满，可以选择等待或者采取其他操作
@@ -42,9 +44,25 @@ void CAN_Transmit(CAN_HandleTypeDef *hcan, uint32_t Id, uint8_t *msg, uint16_t l
         return;
     }
     // TODO: 校验标准帧 ID 和 DLC (0~8)，构造帧头并调用 HAL_CAN_AddTxMessage。
-    (void)Id;
-    (void)msg;
-    (void)len;
+    CAN_TxHeaderTypeDef header = {0};
+    header.StdId = Id;
+    header.IDE = CAN_ID_STD;
+    header.RTR = CAN_RTR_DATA;
+    header.DLC = len;
+
+    uint32_t tx_mailbox;
+    HAL_CAN_AddTxMessage(hcan,&header,msg,&tx_mailbox);
 }
 
 // TODO: 实现 CAN 接收回调，根据总线和标准帧 ID 分发电机反馈。
+extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+    if(hcan == nullptr)return;
+    CAN_RxHeaderTypeDef header;
+    uint8_t data[8];
+    if(HAL_CAN_GetRxMessage(hcan,CAN_RX_FIFO0,&header,data) != HAL_OK)
+        return;
+    if(header.IDE == CAN_ID_STD && header.StdId >= 0x201 && header.StdId <= 0x208){
+        DJIMotorHandler::Instance()->updateFeedback(hcan,data,header.StdId - 0x201);
+    }
+}
