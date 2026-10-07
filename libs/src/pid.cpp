@@ -20,8 +20,19 @@ void PID::UpdateResult()
     err[0] = ref - fdb;
 
     // TODO: 按 mode 实现位置式或增量式 PID，并限制积分和最终输出。
-    // 完成前始终保持零输出。
-    pResult = iResult = dResult = result = 0.0f;
+    using Numeric::LimitABS;
+    if(mode == PID_POSITION){
+        pResult = kp * err[0];
+        iResult = LimitABS(iResult + ki * err[0],maxIOut);
+        dResult = kd * (err[0] - err[1]);
+        result = LimitABS(pResult + iResult + dResult,maxOut);
+    }
+    else{
+        pResult = kp * (err[0] - err[1]);
+        iResult = ki * err[0];
+        dResult = kd * ((err[0] - err[1]) - (err[1] - err[2]));
+        result = LimitABS(result + pResult + iResult + dResult,maxOut);
+    }
 }
 
 void PID::Clear()
