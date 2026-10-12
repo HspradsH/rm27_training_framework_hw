@@ -1,21 +1,26 @@
 #include "threads.hpp"
 #include "LED.hpp"
+#include "bsp_pwm.hpp"
 
 BMI088::cBMI088 imu;
 M2006 motor;
 
 void ImuThread_entry(ULONG input){
+    LED_On(LED_B);
     imu.Config();
+    PWM_Start(&HEATING_RESISTANCE_TIM,HEATING_RESISTANCE_CHANNEL);
     imu.VerifyAccChipID();
     imu.VerifyAccData();
     imu.VerifyGyroChipID();
     imu.Calibrate();
+    if (!imu.self_test.ACC_CHIP_ID_ERR && !imu.self_test.GYRO_CHIP_ID_ERR)
+        imu.self_test.INIT_ERR = false;
     
     while(1){
         imu.ReadAccData(&imu.acc_data);
         imu.ReadGyroData(&imu.gyro_data);
         imu.ReadAccTemperature(&imu.acc_data.temperature);
-        imu.TemperatureControl(50.0f);
+        imu.TemperatureControl(40.0f);
         imu.VerifyAccData();
         imu.VerifyGyroData();
 
@@ -25,13 +30,18 @@ void ImuThread_entry(ULONG input){
 }
 
 void ControlThread_entry(ULONG input){
+    // LED_On(LED_G);
     DJIMotorHandler::Instance()->registerMotor(&motor,&hcan1,0x201);
+    PWM_Start(&htim1,TIM_CHANNEL_1);
     uint32_t tick = 0;
     while(1){
         if(motor.MotorState == M2006::MOTOR_OFFLINE)
             motor.controlMode = M2006::RELAX_MODE;
-        
-        motor.controlMode = M2006::RELAX_MODE;
+        else{
+            motor.controlMode = M2006::SPD_MODE;
+            motor.speedSet = 1.0f;
+        }
+        tick++;
         
         motor.setOutput();
         DJIMotorHandler::Instance()->sendControlData();
@@ -43,6 +53,7 @@ void ControlThread_entry(ULONG input){
 }
 
 void AliveThread_entry(ULONG input){
+    // LED_On(LED_B);
     uint32_t imu_count,ctrl_count;
     while(1){
         imu_count = 0;
@@ -51,17 +62,26 @@ void AliveThread_entry(ULONG input){
         ctrl_count = 0;
         while(tx_semaphore_get(&control_alive_sem,TX_NO_WAIT) == TX_SUCCESS)
             ctrl_count++;
+        LED_Off(LED_R);
+        LED_Off(LED_G);
+        LED_Off(LED_B);
+        LED_Off(LED_R); LED_Off(LED_G); LED_Off(LED_B);
+        /* if (imu.self_test.ACC_CHIP_ID_ERR)  LED_On(LED_R);   // 红 = 加速度计 ID 错
+        if (imu.self_test.GYRO_CHIP_ID_ERR) LED_On(LED_B);   // 蓝 = 陀螺仪 ID 错
+        if (imu.self_test.CALIBRATE_ERR)    LED_On(LED_G); */
         if(imu.self_test.INIT_ERR){
-            LED_On(GPIO_PIN_12);//红灯亮
+            LED_On(LED_R);//红灯亮
         }
         else if(imu_count == 0){
-
+            LED_On(LED_G);//绿灯亮
         }
         else if(ctrl_count == 0){
-
+            LED_On(LED_B);
         }
         else{
-
+            LED_On(LED_R);
+            LED_On(LED_G);
+            LED_On(LED_B);
         }
         tx_thread_sleep(500);
     }
