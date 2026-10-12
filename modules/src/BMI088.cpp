@@ -68,7 +68,6 @@ namespace BMI088
         TempPid.fdb = temp;
         TempPid.UpdateResult();
         float duty = TempPid.result / TempPid.maxOut;
-        // PWM_SetDutyRatio();
         PWM_SetDutyRatio(&HEATING_RESISTANCE_TIM, duty, HEATING_RESISTANCE_CHANNEL);
         self_test.TEMP_CTRL_ERR = false;
     }
@@ -182,23 +181,25 @@ namespace BMI088
         uint8_t rx[9] = {0};
         tx[0] = addr | BMI088_SPI_READ_CODE;
         for(uint8_t i = 1;i < 9;i++)tx[i] = 0xFF;
-        uint8_t size;
-        if(cs == BMI088_CS_ACC)
+        uint8_t size = len + 2;
+        /* if(cs == BMI088_CS_ACC)
             size = len + 2;
         else
-            size = len + 1;
+            size = len + 1; */
         CS_Low(cs);
         if(HAL_SPI_TransmitReceive(&BMI088_SPI_HANDLE,tx,rx,size,100) != HAL_OK)
             self_test.INIT_ERR = true;
         CS_High(cs);
-        if(cs == BMI088_CS_ACC){
+        for(uint8_t i = 0;i < len;i++)
+            data[i] = rx[i + 1];
+        /* if(cs == BMI088_CS_ACC){
             for(uint8_t i = 0;i < len;i++)
                 data[i] = rx[i + 1];
         }
         else{
             for(uint8_t i = 0;i < len;i++)
                 data[i] = rx[i];
-        }
+        } */
     }
 
     void cBMI088::Config()
