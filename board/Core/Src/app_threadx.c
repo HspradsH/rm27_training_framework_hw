@@ -20,7 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "app_threadx.h"
-#include "tx_api.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -91,22 +90,19 @@ UINT App_ThreadX_Init(VOID *memory_ptr)
     ret = TX_START_ERROR;
   if(tx_byte_allocate(byte_pool,&control_stack_ptr,CONTROL_THREAD_STACK_SIZE,TX_NO_WAIT) != TX_SUCCESS)
     ret = TX_START_ERROR;
-  /* USER CODE END App_ThreadX_Init */
 
   if(ret == TX_SUCCESS){
-    tx_thread_create(&control_thread,"control",ControlThread_entry,
-    0,control_stack_ptr,CONTROL_THREAD_STACK_SIZE,
-    5,5,TX_NO_TIME_SLICE,TX_AUTO_START);
+    if(tx_thread_create(&control_thread, "control", ControlThread_entry,0, control_stack_ptr, CONTROL_THREAD_STACK_SIZE, 5, 5, TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
+      ret = TX_START_ERROR;
 
-    tx_thread_create(&imu_thread,"imu",ImuThread_entry,
-    0,imu_stack_ptr,IMU_THREAD_STACK_SIZE,
-    6,6,TX_NO_TIME_SLICE,TX_AUTO_START);
+    if(tx_thread_create(&imu_thread, "imu", ImuThread_entry, 0, imu_stack_ptr, IMU_THREAD_STACK_SIZE, 6, 6, TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
+      ret = TX_START_ERROR;
 
-    tx_thread_create(&alive_thread,"alive",AliveThread_entry,
-    0,alive_stack_ptr,ALIVE_THREAD_STACK_SIZE,
-    10,10,TX_NO_TIME_SLICE,TX_AUTO_START);
+    if(tx_thread_create(&alive_thread, "alive", AliveThread_entry,0, alive_stack_ptr, ALIVE_THREAD_STACK_SIZE, 10, 10, TX_NO_TIME_SLICE, TX_AUTO_START) != TX_SUCCESS)
+      ret = TX_START_ERROR;
   }
-  
+  /* USER CODE END App_ThreadX_Init */
+
   return ret;
 }
 

@@ -9,7 +9,10 @@ void DJIMotorHandler::registerMotor(DJIMotor *motor, CAN_HandleTypeDef *hcan, ui
     // 按 ID 设置对应的 0x200/0x1FF 报文存在标志。
     if((hcan != &hcan1 && hcan != &hcan2) || canId < 0x201 || canId > 0x208 || motor == nullptr)return;
     uint8_t id = hcan == &hcan1 ? 0 : 1;
-    DJIMotorList[id][canId - 0x201] = motor;
+    uint8_t index = canId - 0x201;
+    if(DJIMotorList[id][index] != nullptr)
+        return;
+    DJIMotorList[id][index] = motor;
     motor->hcan = hcan;
     motor->canId = canId;
     if(id == 0){
@@ -47,7 +50,7 @@ void DJIMotorHandler::sendControlData()
     for(uint8_t i = 0;i < 8;i++){
         can1_send_data_0[i] = 0;
         can1_send_data_1[i] = 0;
-        can2_send_data_0[i] = 0;
+        can2_send_data_0[i] = 0; 
         can2_send_data_1[i] = 0;
     }
 

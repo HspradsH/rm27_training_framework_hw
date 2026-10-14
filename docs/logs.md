@@ -58,3 +58,18 @@ CAN
 ESR 16253015 MSR 3080 TSR 2181038080
 
 ESR 0xF80057 TSR 0x82000000 MSR = 0xC08
+
+10.14
+ESR	Error Status Register	通信有没有错误、错误计数、是否 Bus-off
+TSR	Transmit Status Register	三个发送邮箱是否空闲、发送是否成功或失败
+MSR	Master Status Register	控制器是否处于初始化、睡眠、收发等状态
+
+hcan1.Instance->ESR
+hcan1.Instance->TSR
+hcan1.Instance->MSR
+
+修改 thread 频率
+
+时钟配错了：C 板 12 MHz
+
+电机可以转动，温度可以控制。

@@ -20,14 +20,16 @@ void CAN_Init(void)
     can_filter_st.FilterMaskIdHigh = 0x0000;           ///< 过滤器掩码高位
     can_filter_st.FilterMaskIdLow = 0x0000;            ///< 过滤器掩码低位
 
+                            ///< 双CAN模式下规定CAN的主从模式的过滤器分配，从过滤器为14
+
     can_filter_st.FilterBank = 0;                                      ///< 过滤器组-双CAN可指定0~27
     can_filter_st.FilterFIFOAssignment = CAN_RX_FIFO0;                 ///< 与过滤器组管理的 FIFO
     HAL_CAN_ConfigFilter(&hcan1, &can_filter_st);                      ///< HAL库配置过滤器函数
     HAL_CAN_Start(&hcan1);                                             ///< 使能CAN1控制器
     HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING); ///< 使能CAN的各种中断
 
-    can_filter_st.SlaveStartFilterBank = 14;                           ///< 双CAN模式下规定CAN的主从模式的过滤器分配，从过滤器为14
-    can_filter_st.FilterBank = 14;                                     ///< 过滤器组-双CAN可指定0~27
+    can_filter_st.FilterBank = 14;                
+    can_filter_st.SlaveStartFilterBank = 14;                        ///< 过滤器组-双CAN可指定0~27
     HAL_CAN_ConfigFilter(&hcan2, &can_filter_st);                      ///< HAL库配置过滤器函数
     HAL_CAN_Start(&hcan2);                                             ///< 使能CAN2控制器
     HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING); ///< 使能CAN的各种中断
@@ -40,7 +42,7 @@ void CAN_Transmit(CAN_HandleTypeDef *hcan, uint32_t Id, uint8_t *msg, uint16_t l
     {
         // 如果邮箱已满，可以选择等待或者采取其他操作
         // 例如，可以添加一个超时机制或者直接返回错误状态
-        // Monitor::instance()->Log_Messages(Monitor::WARNING, (uint8_t *)"CAN Tx Mailbox is full\r\n");
+        //Monitor::instance()->Log_Messages(Monitor::WARNING, (uint8_t *)"CAN Tx Mailbox is full\r\n");
         return;
     }
     // TODO: 校验标准帧 ID 和 DLC (0~8)，构造帧头并调用 HAL_CAN_AddTxMessage。

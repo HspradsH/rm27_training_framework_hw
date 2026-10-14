@@ -20,7 +20,7 @@ void ImuThread_entry(ULONG input){
         imu.ReadAccData(&imu.acc_data);
         imu.ReadGyroData(&imu.gyro_data);
         imu.ReadAccTemperature(&imu.acc_data.temperature);
-        imu.TemperatureControl(40.0f);
+        imu.TemperatureControl(50.0f);
         imu.VerifyAccData();
         imu.VerifyGyroData();
 
@@ -30,7 +30,6 @@ void ImuThread_entry(ULONG input){
 }
 
 void ControlThread_entry(ULONG input){
-    // LED_On(LED_G);
     DJIMotorHandler::Instance()->registerMotor(&motor,&hcan1,0x201);
     PWM_Start(&htim1,TIM_CHANNEL_1);
     uint32_t tick = 0;
@@ -38,8 +37,8 @@ void ControlThread_entry(ULONG input){
         if(motor.MotorState == M2006::MOTOR_OFFLINE)
             motor.controlMode = M2006::RELAX_MODE;
         else{
-            motor.controlMode = M2006::SPD_MODE;
-            motor.speedSet = 1.0f;
+            motor.controlMode = M2006::POS_MODE;
+            motor.speedSet = 0.5f;
         }
         tick++;
         
