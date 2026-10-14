@@ -8,7 +8,7 @@ M2006::M2006()
     maxCurrent = 10000;
 
     speedPid = PID(3000.0f, 500.0f, 0.0f, 10000.0f, 5000.0f, PID_POSITION); ///配置速度环参数
-    positionPid = PID(8.0f, 0.0f, 0.0f, 2.0f, 0.0f, PID_POSITION); 
+    positionPid = PID(8.0f, 1.0f, 2.0f, 2.0f, 0.0f, PID_POSITION); 
 
     controlMode = RELAX_MODE;
     currentSet = 0;
